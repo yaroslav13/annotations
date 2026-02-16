@@ -1,10 +1,7 @@
 name: annotations
-description: A Dart analyzer plugin providing the @Throws annotation and static analysis rules for exception handling.
+description: A Dart analyzer plugin providing the annotations and static analysis rules for them.
 version: 1.0.0
-# repository: https://github.com/my_org/my_repo
-
-# Declare this package as an analyzer plugin
-configures_plugin: true
+repository: https://github.com/yaroslav13/annotations
 
 environment:
   sdk: ^3.10.8

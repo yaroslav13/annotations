@@ -1,3 +1,3 @@
 ## 1.0.0
 
-- Initial version.
+- Add @Throws annotation and the corresponding lint rule `handle_throwing_invocations`
