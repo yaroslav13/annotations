@@ -7,6 +7,7 @@ A comprehensive Dart analyzer plugin that provides powerful annotations and stat
 - `@Throws`: Declare the exceptions that a function can throw, enabling better documentation and static analysis of error handling.
 
 ## Rules
+
 - `handle_throwing_invocations`: Ensures that any function that calls a function annotated with `@Throws` either catches the declared exceptions or also declares them with `@Throws`.
 
 ## Installation
@@ -15,7 +16,7 @@ Add this package as a dependency:
 
 ```yaml
 dependencies:
-  annotations: ^1.0.0
+  dart_annotations: ^1.0.0
 ```
 
 ## Configuration
@@ -25,7 +26,7 @@ You can configure it in your `analysis_options.yaml`:
 ```yaml
 analyzer:
   plugins:
-    - annotations
+    - dart_annotations
 
 linter:
   rules:

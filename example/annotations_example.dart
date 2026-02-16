@@ -1,4 +1,4 @@
-import 'package:annotations/annotations.dart';
+import 'package:dart_annotations/dart_annotations.dart';
 
 void main() {
   // 1. The lint should highlight the call to `doSomething()` and indicate that it may throw a `FormatException`.
