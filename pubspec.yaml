@@ -1,4 +1,4 @@
-name: annotations
+name: dart_annotations
 description: A Dart analyzer plugin providing the annotations and static analysis rules for them.
 version: 1.0.0
 repository: https://github.com/yaroslav13/annotations
