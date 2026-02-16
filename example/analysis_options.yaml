@@ -1,0 +1,7 @@
+include: package:flutter_lints/flutter.yaml
+
+plugins:
+  annotations:
+    path: ../
+    diagnostics:
+      handle_throwing_invocations: true
