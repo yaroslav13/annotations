@@ -6,7 +6,7 @@ environment:
   sdk: ^3.10.8
 
 dependencies:
-  annotations:
+  dart_annotations:
     path: ../
 
 dev_dependencies:
