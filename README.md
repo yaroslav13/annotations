@@ -1,6 +1,6 @@
 # Annotations
 
-A comprehensive Dart analyzer plugin that provides powerful annotations and static analysis rules for them. 
+A comprehensive Dart analyzer plugin that provides powerful annotations and static analysis rules for them.
 
 ## Annotations
 
@@ -34,6 +34,8 @@ linter:
 ```
 
 ## Usage
+
+### Basic Usage
 
 ```dart
 @Throws({CustomException})
@@ -70,6 +72,55 @@ void callerFunction() {
 void anotherCallerFunction() {
     riskyFunction(); // Warning: callerFunction should declare @Throws
 }
+
+// ❌ Wrong exception type caught
+try {
+  riskyFunction();
+} on StateError catch (e) {
+  // This doesn't catch CustomException!
+  // Warning: Unhandled exception from invocation annotated with @Throws
+}
+```
+
+### Async Functions
+
+```dart
+@Throws({CustomException})
+Future<void> riskyAsyncFunction() async { /* ... */ }
+
+// ✅ Awaited call inside try-catch
+try {
+  await riskyAsyncFunction();
+} catch (e) {
+  // handle
+}
+
+// ✅ Using .catchError()
+riskyAsyncFunction().catchError((e) {
+  // handle
+});
+
+// ✅ Using .then() with onError
+riskyAsyncFunction().then((_) {
+  // success
+}, onError: (e) {
+  // handle
+});
+
+// ✅ Chained .then().catchError()
+riskyAsyncFunction()
+  .then((_) => print('success'))
+  .catchError((e) => print('error'));
+
+// ❌ Non-awaited call - try-catch won't catch async exceptions!
+try {
+  riskyAsyncFunction(); // Warning: async call not awaited
+} catch (e) {
+  // This won't catch the exception!
+}
+
+// ❌ Unhandled async call
+riskyAsyncFunction(); // Warning: Unhandled exception
 ```
 
 ## Contributing

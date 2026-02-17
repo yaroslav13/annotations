@@ -1,4 +1,6 @@
-/// Annotation that declares a function, method, constructor, or getter
+import 'package:meta/meta_meta.dart';
+
+/// Annotation that declares a function, method, or getter
 /// may throw one or more exceptions at runtime.
 ///
 /// This annotation is intended to be enforced by the `annotations` analyzer
@@ -23,6 +25,7 @@
 /// When a function annotated with `@Throws` is called, the analyzer plugin
 /// will warn if the call is not wrapped in an appropriate try-catch block
 /// or otherwise handled.
+@Target({TargetKind.function, TargetKind.method, TargetKind.getter})
 final class Throws {
   /// Creates a [Throws] annotation with the given set of exception types.
   ///
