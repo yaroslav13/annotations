@@ -1,3 +1,7 @@
+# 1.0.6
+
+- Update integration example
+
 # 1.0.5
 
 - Update readme
