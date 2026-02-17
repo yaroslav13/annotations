@@ -9,9 +9,7 @@ final plugin = DartAnnotationsPlugin();
 
 /// The annotations analyzer plugin.
 ///
-/// This plugin provides static analysis rules for the `@Throws` annotation,
-/// warning developers when they call functions that may throw exceptions
-/// without proper exception handling.
+/// This plugin provides static analysis rules for annotations defined in the `dart_annotations` package, such as `@Throws`.
 final class DartAnnotationsPlugin extends Plugin {
   @override
   String get name => 'dart_annotations';

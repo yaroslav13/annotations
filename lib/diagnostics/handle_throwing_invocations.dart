@@ -19,12 +19,6 @@ const _code = LintCode(
 
 /// A diagnostic rule that warns when code invokes declarations annotated
 /// with `@Throws` without handling the potential exception.
-///
-/// The rule triggers when:
-/// 1. An invocation targets a function/method/constructor/getter annotated
-///    with `@Throws(...)`.
-/// 2. The invocation is not considered "handled" (e.g., not inside a try-catch
-///    that catches the declared exception types).
 final class HandleThrowingInvocations extends AnalysisRule {
   HandleThrowingInvocations()
     : super(
@@ -103,6 +97,9 @@ final class _Visitor extends SimpleAstVisitor<void> {
     // Get the exception types from the annotation
     final exceptionTypes = _getExceptionTypes(throwsAnnotation);
 
+    // Check if the invocation is handled via .catchError() or .then(..., onError: ...)
+    if (_isHandledViaCatchError(node)) return;
+
     // Check if the invocation is handled
     if (_isInvocationHandled(node, exceptionTypes)) return;
 
@@ -111,6 +108,73 @@ final class _Visitor extends SimpleAstVisitor<void> {
 
     // Report the diagnostic
     rule.reportAtNode(node);
+  }
+
+  /// Checks if the invocation is handled via .catchError() or .then(..., onError: ...).
+  bool _isHandledViaCatchError(AstNode node) {
+    final parent = node.parent;
+
+    // Check if the node is the target of a method invocation (e.g., doSomethingAsync().catchError(...))
+    if (parent is MethodInvocation) {
+      final methodName = parent.methodName.name;
+
+      // Check for .catchError()
+      if (methodName == 'catchError' && parent.target == node) {
+        return true;
+      }
+
+      // Check for .then(..., onError: ...) or .then(...).catchError(...)
+      if (methodName == 'then' && parent.target == node) {
+        // Check if onError parameter is provided
+        final arguments = parent.argumentList.arguments;
+        for (final arg in arguments) {
+          if (arg is NamedExpression && arg.name.label.name == 'onError') {
+            return true;
+          }
+        }
+        // Even without onError, check if there's a chained .catchError()
+        if (_hasChainedCatchError(parent)) {
+          return true;
+        }
+      }
+
+      // Check for chained calls like .whenComplete().catchError() etc.
+      if ((methodName == 'whenComplete' || methodName == 'timeout') &&
+          parent.target == node) {
+        if (_hasChainedCatchError(parent)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /// Checks if a method invocation has a chained .catchError() call.
+  bool _hasChainedCatchError(MethodInvocation node) {
+    final parent = node.parent;
+    if (parent is MethodInvocation) {
+      final methodName = parent.methodName.name;
+      if (methodName == 'catchError' && parent.target == node) {
+        return true;
+      }
+      if (methodName == 'then' && parent.target == node) {
+        // Check for onError parameter
+        final arguments = parent.argumentList.arguments;
+        for (final arg in arguments) {
+          if (arg is NamedExpression && arg.name.label.name == 'onError') {
+            return true;
+          }
+        }
+        // Continue checking the chain
+        return _hasChainedCatchError(parent);
+      }
+      if ((methodName == 'whenComplete' || methodName == 'timeout') &&
+          parent.target == node) {
+        return _hasChainedCatchError(parent);
+      }
+    }
+    return false;
   }
 
   /// Gets the @Throws annotation from the element if present.
@@ -173,11 +237,80 @@ final class _Visitor extends SimpleAstVisitor<void> {
         if (_isNodeInTryBlock(node, current)) {
           // Check if any catch clause can handle the exception
           if (_canCatchClausesHandle(current.catchClauses, exceptionTypes)) {
+            // For async invocations (returning Future), verify the call is awaited
+            // Without await, try-catch won't catch async exceptions
+            if (_isAsyncInvocation(node)) {
+              if (!_isAwaited(node)) {
+                return false;
+              }
+            }
             return true;
           }
         }
       }
       current = current.parent;
+    }
+
+    return false;
+  }
+
+  /// Checks if the invocation returns a Future (async invocation).
+  bool _isAsyncInvocation(AstNode node) {
+    DartType? returnType;
+
+    if (node is MethodInvocation) {
+      returnType = node.staticType;
+    } else if (node is FunctionExpressionInvocation) {
+      returnType = node.staticType;
+    } else if (node is InstanceCreationExpression) {
+      returnType = node.staticType;
+    } else if (node is PropertyAccess) {
+      returnType = node.staticType;
+    } else if (node is PrefixedIdentifier) {
+      returnType = node.staticType;
+    }
+
+    if (returnType == null) return false;
+
+    // Check if the return type is Future or FutureOr
+    return _isFutureType(returnType);
+  }
+
+  /// Checks if the type is a Future or FutureOr type.
+  bool _isFutureType(DartType type) {
+    if (type is InterfaceType) {
+      final element = type.element;
+      final name = element.name;
+      if (name == 'Future' || name == 'FutureOr') {
+        return true;
+      }
+    }
+    // Also check if it's a type alias resolving to Future
+    if (type.alias != null) {
+      final aliasedType = type.alias!.element.aliasedType;
+      return _isFutureType(aliasedType);
+    }
+    return false;
+  }
+
+  /// Checks if the invocation is awaited.
+  bool _isAwaited(AstNode node) {
+    final parent = node.parent;
+
+    // Direct await: await doSomethingAsync()
+    if (parent is AwaitExpression && parent.expression == node) {
+      return true;
+    }
+
+    // Await on method chain: await doSomethingAsync().then(...)
+    // In this case, we need to check if the parent chain eventually is awaited
+    if (parent is MethodInvocation && parent.target == node) {
+      return _isAwaited(parent);
+    }
+
+    // Check if wrapped in parentheses: await (doSomethingAsync())
+    if (parent is ParenthesizedExpression) {
+      return _isAwaited(parent);
     }
 
     return false;
