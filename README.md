@@ -16,7 +16,7 @@ Add this package as a dependency:
 
 ```yaml
 dependencies:
-  dart_annotations: ^1.0.5
+  dart_annotations: ^1.0.6
 ```
 
 ## Configuration
@@ -25,7 +25,10 @@ You can configure it in your `analysis_options.yaml`:
 
 ```yaml
 plugins:
-  dart_annotations: ^1.0.5
+  dart_annotations:
+    version: ^1.0.6
+    diagnostics:
+      handle_throwing_invocations: true
 ```
 
 ## Usage
