@@ -24,13 +24,8 @@ dependencies:
 You can configure it in your `analysis_options.yaml`:
 
 ```yaml
-analyzer:
-  plugins:
-    - dart_annotations
-
-linter:
-  rules:
-    handle_throwing_invocations: true
+plugins:
+  dart_annotations: ^1.0.4
 ```
 
 ## Usage
